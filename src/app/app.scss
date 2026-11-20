@@ -1,0 +1,265 @@
+:host {
+  display: block;
+}
+
+.stage {
+  --w: min(80vw, 600px, 112vh);
+  --h: calc(var(--w) / 1.586);
+  --r: calc(var(--w) * 0.04);
+  --face-z: 2.7px;
+  --px: 0;
+  --py: 0;
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 70% at 50% 112%, #1d2b66 0%, #0c1236 45%, transparent 75%),
+    linear-gradient(#02030a, #060a20 60%, #0a1030);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &.grabbing {
+    cursor: grabbing;
+  }
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+// Slow crimson + blue aurora: the colours of the Nepali flag.
+.aurora {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  opacity: 0.55;
+  filter: blur(70px);
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(34% 22% at 30% 34%, rgb(220 20 60 / 0.5), transparent 70%),
+    radial-gradient(40% 26% at 70% 28%, rgb(0 56 147 / 0.75), transparent 70%),
+    radial-gradient(30% 18% at 52% 52%, rgb(120 60 200 / 0.3), transparent 70%);
+  animation: aurora 24s ease-in-out infinite alternate;
+}
+
+@keyframes aurora {
+  0% { transform: translate3d(-4%, 2%, 0) rotate(-4deg) scale(1); }
+  50% { transform: translate3d(3%, -3%, 0) rotate(3deg) scale(1.08); }
+  100% { transform: translate3d(5%, 3%, 0) rotate(-2deg) scale(0.96); }
+}
+
+.moon {
+  position: absolute;
+  top: 11%;
+  right: 13%;
+  width: clamp(34px, 5vw, 70px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 62% 60%, rgb(0 0 0 / 0.07) 0 9%, transparent 10%),
+    radial-gradient(circle at 34% 66%, rgb(0 0 0 / 0.06) 0 6%, transparent 7%),
+    radial-gradient(circle at 45% 30%, rgb(0 0 0 / 0.05) 0 12%, transparent 13%),
+    radial-gradient(circle at 38% 35%, #fffaf0, #efe4c8 55%, #d6c8a3);
+  box-shadow:
+    0 0 40px 8px rgb(255 236 200 / 0.25),
+    0 0 160px 60px rgb(160 180 255 / 0.1);
+  transform: translate3d(calc(var(--px) * -8px), calc(var(--py) * -5px), 0);
+}
+
+.range {
+  position: absolute;
+  left: -3%;
+  bottom: 0;
+  width: 106%;
+  height: 42vh;
+  min-height: 200px;
+  pointer-events: none;
+}
+
+.far { transform: translateX(calc(var(--px) * -8px)); }
+.mist { transform: translateX(calc(var(--px) * -12px)); }
+.mid { transform: translateX(calc(var(--px) * -16px)); }
+.near { transform: translateX(calc(var(--px) * -28px)); }
+
+// ── The card ──────────────────────────────────────────────
+
+.scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  // Fixed track so the oversized halo can't widen the grid and push the card off-centre.
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  padding-bottom: 8vh;
+  pointer-events: none;
+
+  > * {
+    grid-area: 1 / 1;
+  }
+}
+
+.halo {
+  width: calc(var(--w) * 1.6);
+  aspect-ratio: 1.6;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(255 255 255 / 0.1),
+    rgb(120 140 255 / 0.1) 40%,
+    rgb(220 20 60 / 0.07) 65%,
+    transparent
+  );
+  animation: breathe 7s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% { opacity: 0.55; scale: 0.92; }
+}
+
+// Shadow + moonlit glow on the ground beneath the card.
+.pool {
+  width: var(--w);
+  height: calc(var(--h) * 0.24);
+  translate: 0 calc(var(--h) * 0.85);
+  border-radius: 50%;
+  opacity: 0;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.6), rgb(0 0 0 / 0.25) 50%, transparent);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -60% -25%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(160 185 255 / 0.38), rgb(220 20 60 / 0.12) 55%, transparent);
+  }
+}
+
+.rig {
+  perspective: calc(var(--w) * 2.6);
+  opacity: 0;
+}
+
+.card {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--r);
+  background: #dfe3d3;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(var(--face-z));
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    -webkit-user-drag: none;
+  }
+
+  i {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  // Thin laminate rim catching the light.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.35),
+      inset 0 0 18px rgb(0 0 0 / 0.12);
+  }
+}
+
+.front {
+  --gx: var(--gxf, 50%);
+  --hp: var(--hpf, 50%);
+}
+
+.back {
+  --gx: var(--gxb, 50%);
+  --hp: var(--hpb, 50%);
+  transform: rotateY(180deg) translateZ(var(--face-z));
+}
+
+// Rainbow security-foil shimmer, strongest near the light and at steep angles.
+.holo {
+  opacity: var(--holo, 0.12);
+  mix-blend-mode: color-dodge;
+  background: repeating-linear-gradient(
+    115deg,
+    #ff7aa8 0%,
+    #ffd37a 7%,
+    #8affc1 14%,
+    #7ad8ff 21%,
+    #b28aff 28%,
+    #ff7aa8 35%
+  );
+  background-size: 400% 400%;
+  background-position: var(--hp) 50%;
+  mask-image: radial-gradient(
+    farthest-corner at var(--gx) var(--gy, 25%),
+    #000,
+    rgb(0 0 0 / 0.4) 55%,
+    rgb(0 0 0 / 0.15)
+  );
+}
+
+// Darkens the face as it turns away from the viewer.
+.shade {
+  background: linear-gradient(
+    90deg,
+    rgb(6 10 35 / var(--shade, 0)),
+    rgb(6 10 35 / calc(var(--shade, 0) * 0.5))
+  );
+}
+
+// Glossy highlight + a soft streak that sweeps across as the card turns.
+.glare {
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(
+      farthest-corner circle at var(--gx) var(--gy, 25%),
+      rgb(255 255 255 / 0.32),
+      rgb(255 255 255 / 0.08) 25%,
+      transparent 50%
+    ),
+    linear-gradient(
+      105deg,
+      transparent calc(var(--gx) - 16%),
+      rgb(255 255 255 / 0.16) var(--gx),
+      transparent calc(var(--gx) + 16%)
+    );
+}
+
+.edge {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r);
+  background: linear-gradient(180deg, #eef1e6, #aab29a);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .halo {
+    animation: none;
+  }
+}
